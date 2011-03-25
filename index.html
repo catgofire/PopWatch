@@ -29,11 +29,16 @@
       xaxis: {
       },
     };
+    
+    var old_sum = 0;
+    var new_sum = 0;
+    var counter_interval;
+    var counter_value;
+    var update_timeout;
 
     displayTickerStocks = function(ticker_data)
     {
-      console.log("Ticker Data");
-      console.log(ticker_data);
+      new_sum = 0;
 
       var bar_data = [];
       var series = [];
@@ -52,6 +57,7 @@
         i = parseInt(i);
 
         var tmp              = bar_data[i];
+        var label            = tmp[1];
         var market_value     = parseInt(tmp[0]);
         var previous_value   = parseInt(tmp[2]);
         var difference       = (market_value - previous_value);
@@ -60,20 +66,29 @@
         var point_fill_color = went_up ? 'rgb(0,255,0)' : 'rgb(255,0,0)';
         var point_radius     = abs_percentage * 5;
         point_radius         = Math.max(2, Math.min(15, point_radius));
-
+        
+        new_sum += market_value;
+        
         series.push({
-          data: [[i, tmp[0]]],
+          data: [[i, market_value]],
           bars: {show: true, barWidth: 0.8, fill: 1.0, align: "center"},
-          label: tmp[1],
+          label: label,
         });
-        xticks.push([i, tmp[1]]);
+        xticks.push([i, label]);
         series.push({
-          data: [[(i), tmp[2]]],
+          data: [[i, previous_value]],
           points: {show: true, fill: 1.0, fillColor: point_fill_color, radius: point_radius},
           color: point_fill_color,
           hoverable: false,
           clickable: false
         });
+      }
+      
+      console.log("old_sum: "+old_sum+", new_sum: "+new_sum);
+      if(old_sum != new_sum)
+      {
+        alert("Data has been updated!");
+        old_sum = new_sum;
       }
 
       plot_options.xaxis = {
@@ -85,10 +100,6 @@
       var plot = $.plot($("#placeholder"), series, plot_options);
 
       $("#placeholder").bind("plothover", function(event, pos, item) {
-        console.log(event);
-        console.log(pos);
-        console.log(item);
-
         if(item)
         {
           var info_text = item.series.label;
@@ -97,12 +108,29 @@
           $("#hover_info").css({top: "200px", left: "100px"}).html(info_text);
         }
       });
+      
+      if(counter_interval)
+      {
+        clearInterval(counter_interval);
+      }
+      counter_value = 0;
+      counter_interval = setInterval(function(){
+        $("#time_seconds").text(++counter_value);
+      }, 1000);
+      // get the updated ticker every so often
+      if(update_timeout)
+      {
+        clearTimeout(update_timeout);
+      }
+      update_timeout = setTimeout(getTickerStocks, 20000);
     }
 
     getTickerStocks = function()
     {
       $.getJSON(ticker_url, displayTickerStocks);
     }
+    
+    getTickerStocks();
   </script>
 </head>
 <body>
@@ -111,7 +139,10 @@
 
   <div id="hover_info" style="position:absolute;background-color:rgba(255,255,255,0.7);font-size:40px;border:2px solid rgba(0,0,0,0.3);"></div>
 
-  <input type="button" onclick="getTickerStocks();" value="Get Ticker Stocks">
+  <input type="button" onclick="getTickerStocks();" value="Update Ticker Stocks Now">
+  <div id="time_since_update">
+    <span id="time_seconds">inf.</span> seconds have passed since the last update.
+  </div>
 
 </body>
 </html>
