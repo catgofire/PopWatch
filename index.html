@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>pop stocks ticker data</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.0/jquery.min.js" type="text/javascript"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.10/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
+  <script src="flot/jquery.flot.min.js" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" charset="utf-8">
+    // var ticker_url = "http://pop-stocks.appspot.com/api/market/getTickerStocks";
+    var ticker_url = "getTickerStocks.php";
+    var plot_options = {
+      legend: {
+        noColumns: 10,
+        margin: [30, 5],
+      },
+    };
+    
+    displayTickerStocks = function(ticker_data)
+    {
+      console.log("Ticker Data");
+      console.log(ticker_data);
+
+      var bar_data = [];
+      var series = [];
+      for(var i in ticker_data)
+      {
+        // bar_data.push([parseInt(i), ticker_data[i].marketPrice]);
+        bar_data.push([ticker_data[i].marketPrice, ticker_data[i].displayName, ticker_data[i].lastNightlyPrice]);
+      }
+      
+      sort_data = function(a, b){ return (a[0] - b[0]);}
+      bar_data.sort(sort_data);
+      
+      for(var i in bar_data)
+      {
+        i = parseInt(i);
+        var tmp = bar_data[i];
+        var went_up = (tmp[0] - tmp[2]) >= 0 ? true : false;
+        var point_fill_color = went_up ? 'rgb(0,255,0)' : 'rgb(255,0,0)';
+        
+        series.push({
+          data: [[i, tmp[0]]],
+          bars: {show: true, barWidth: 0.8, fill: 1.0, align: "center"},
+          label: tmp[1],
+          hoverable: true,
+        });
+        series.push({
+          data: [[(i), tmp[2]]],
+          points: {show: true, fill: 1.0, fillColor: point_fill_color},
+          color: point_fill_color,
+        });
+      }
+
+      $.plot($("#placeholder"), series, plot_options);
+    }
+    
+    getTickerStocks = function()
+    {
+      $.getJSON(ticker_url, displayTickerStocks);
+    }
+  </script>
+</head>
+<body>
+
+  <div id="placeholder" style="width:900px;height:600px"></div>  
+  
+  <input type="button" onclick="getTickerStocks();" value="Get Ticker Stocks">
+  
+</body>
+</html>
+
