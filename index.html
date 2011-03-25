@@ -56,11 +56,10 @@
         var previous_value   = parseInt(tmp[2]);
         var difference       = (market_value - previous_value);
         var went_up          = difference >= 0 ? true : false;
-        var abs_percentage   = went_up ? (market_value/previous_value) : (previous_value/market_value);
-        abs_percentage       = (abs_percentage)/100;
+        var abs_percentage   = went_up ? (difference/previous_value) : ((previous_value/market_value) - 1);
         var point_fill_color = went_up ? 'rgb(0,255,0)' : 'rgb(255,0,0)';
         var point_radius     = abs_percentage * 5;
-        point_radius         = Math.max(2, Math.min(10, point_radius));
+        point_radius         = Math.max(2, Math.min(15, point_radius));
 
         series.push({
           data: [[i, tmp[0]]],
